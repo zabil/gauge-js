@@ -9,7 +9,7 @@ node_js:
 install:
   - npm install
 env:
-  - GAUGE_TELEMETRY_ENABLED=false GAUGE_PREFIX=/tmp
+  - GAUGE_TELEMETRY_ENABLED=false GAUGE_PREFIX=/tmp TERM=dumb
 script:
   - npm test
   - cd ..
