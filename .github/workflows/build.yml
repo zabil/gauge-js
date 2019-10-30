@@ -104,6 +104,7 @@ jobs:
           git clone https://github.com/getgauge/gauge-tests
           cd gauge-tests
           gauge install
+          gauge -v
           .\gradlew.bat clean jsFT
         shell: pwsh
 
@@ -122,12 +123,10 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v1
 
-
-      - name: Setup plugin
+      - name: Update submodule
         run: |
           git submodule init
           git submodule update
-          npm install
 
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -150,6 +149,21 @@ jobs:
           go run build/make.go --verbose
           go run build/make.go --install
 
+      - name: Install plugin (linux and macos)
+        if: matrix.os != 'windows-latest'
+        run: |
+          export PATH=${PATH}:/tmp/gauge/bin
+          npm install
+          npm run installPlugin
+
+      - name: Install plugin (windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          ${env:PATH} += ";C:\Program Files\gauge\bin"
+          npm install
+          npm run installPlugin
+        shell: pwsh
+
       - name: Setup lsp tests
         run: |
           git clone https://github.com/getgauge/gauge-lsp-tests
@@ -160,16 +174,16 @@ jobs:
         if: matrix.os != 'windows-latest'
         run: |
           export PATH=${PATH}:/tmp/gauge/bin
-          npm run installPlugin
           cd gauge-lsp-tests
           gauge install
+          gauge -v
           gauge run --tags='!knownIssue & (actions_on_project_load | actions_on_file_edit)' --env=js-wd
 
       - name: Run LSP tests (windows)
         if: matrix.os == 'windows-latest'
         run: |
           set PATH="C:\\Program Files\\gauge\\bin";%PATH%
-          npm run installPlugin
           cd gauge-lsp-tests
           gauge install
+          gauge -v
           gauge run --tags="!knownIssue & (actions_on_project_load | actions_on_file_edit)" --env=js-wd
