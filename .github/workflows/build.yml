@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   test:
-    name: Node ${{ matrix.node_version }} ${{ matrix.os }}
+    name: Unit tests - Node ${{ matrix.node_version }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -44,11 +44,10 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v1
 
-      - name: Setup plugin
+      - name: Update submodule
         run: |
           git submodule init
           git submodule update
-          npm install
 
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -70,15 +69,31 @@ jobs:
           cd gauge
           go run build/make.go --verbose
           go run build/make.go --install
+        shell: pwsh
 
-      - name: Run FTs (linux)
+      - name: Install plugin (linux and macos)
         if: matrix.os != 'windows-latest'
         run: |
           export PATH=${PATH}:/tmp/gauge/bin
+          npm install
           npm run installPlugin
+
+      - name: Install plugin (windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          ${env:PATH} += ";C:\Program Files\gauge\bin"
+          npm install
+          npm run installPlugin
+        shell: pwsh
+
+      - name: Run FTs (linux and macos)
+        if: matrix.os != 'windows-latest'
+        run: |
+          export PATH=${PATH}:/tmp/gauge/bin
           git clone https://github.com/getgauge/gauge-tests
           cd gauge-tests
           gauge install
+          gauge -v
           ./gradlew clean jsFT
 
       - name: Run FTs (windows)
