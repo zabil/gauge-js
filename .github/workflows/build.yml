@@ -182,8 +182,9 @@ jobs:
       - name: Run LSP tests (windows)
         if: matrix.os == 'windows-latest'
         run: |
-          set PATH="C:\\Program Files\\gauge\\bin";%PATH%
+          ${env:PATH} += ";C:\Program Files\gauge\bin"
           cd gauge-lsp-tests
           gauge install
           gauge -v
           gauge run --tags="!knownIssue & (actions_on_project_load | actions_on_file_edit)" --env=js-wd
+        shell: pwsh
